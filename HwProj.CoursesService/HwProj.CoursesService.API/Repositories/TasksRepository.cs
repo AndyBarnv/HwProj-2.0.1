@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Transactions;
 using HwProj.CoursesService.API.Models;
+using HwProj.Models.CoursesService.ViewModels;
 using HwProj.Repositories.Net8;
 using Microsoft.EntityFrameworkCore;
 
@@ -59,6 +60,19 @@ namespace HwProj.CoursesService.API.Repositories
             return Context.Set<HomeworkTask>()
                 .Where(x => x.Id == id)
                 .Select(x => (long?)x.Homework.CourseId)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<CourseSummaryDTO?> GetCourseSummaryByTaskAsync(long id)
+        {
+            return await Context.Set<Course>()
+                .Where(c => c.Homeworks.Any(h => h.Tasks.Any(t => t.Id == id)))
+                .Select(c => new CourseSummaryDTO
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    MentorIds = c.Mentors.Select(m => m.UserId).ToArray()
+                })
                 .FirstOrDefaultAsync();
         }
 

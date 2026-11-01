@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using HwProj.Models.CoursesService.ViewModels;
 using HwProj.Models.SolutionsService;
 using HwProj.Models.StatisticsService;
 using HwProj.SolutionsService.API.Models;
@@ -16,7 +17,7 @@ namespace HwProj.SolutionsService.API.Services
 
         Task<Solution[]> GetTaskSolutionsFromGroupAsync(long taskId, long groupId);
 
-        Task<long> PostOrUpdateAsync(long taskId, Solution solution);
+        Task<long> PostOrUpdateAsync(long taskId, Solution solution, HomeworkTaskViewModel task);
         Task PostEmptySolutionWithRateAsync(long task, Solution solution);
 
         Task RateSolutionAsync(long solutionId, string lecturerId, int newRating, string lecturerComment);

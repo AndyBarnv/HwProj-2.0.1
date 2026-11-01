@@ -95,6 +95,15 @@ namespace HwProj.CoursesService.API.Controllers
             return Ok(course);
         }
 
+        [HttpGet("getByTaskSummary/{taskId}")]
+        public async Task<IActionResult> GetByTaskSummary(long taskId)
+        {
+            var course = await _coursesService.GetCourseSummaryByTaskAsync(taskId);
+            if (course == null) return NotFound();
+
+            return Ok(course);
+        }
+
         [HttpPost("create")]
         public async Task<IActionResult> AddCourse([FromBody] CreateCourseViewModel courseViewModel)
         {
