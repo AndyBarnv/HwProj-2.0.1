@@ -7,6 +7,7 @@ using HwProj.CoursesService.Client;
 using HwProj.EventBus.Client.Interfaces;
 using HwProj.Models.AuthService.DTO;
 using HwProj.Models.CoursesService;
+using HwProj.Models.CoursesService.ViewModels;
 using HwProj.Models.SolutionsService;
 using HwProj.Models.StatisticsService;
 using HwProj.NotificationService.Events.SolutionsService;
@@ -102,12 +103,10 @@ namespace HwProj.SolutionsService.API.Services
             return taskIds.Select(t => solutions.FirstOrDefault(s => s?.TaskId == t)).ToArray();
         }
 
-        public async Task<long> PostOrUpdateAsync(long taskId, Solution solution)
+        public async Task<long> PostOrUpdateAsync(long taskId, Solution solution, HomeworkTaskViewModel task)
         {
             solution.PublicationDate = DateTime.UtcNow;
             solution.TaskId = taskId;
-
-            var task = await _coursesServiceClient.GetTask(solution.TaskId);
 
             var lastSolution =
                 await _solutionsRepository
@@ -135,7 +134,13 @@ namespace HwProj.SolutionsService.API.Services
                 solutionId = await _solutionsRepository.AddAsync(solution);
 
                 var solutionModel = _mapper.Map<SolutionViewModel>(solution);
-                var course = await _coursesServiceClient.GetCourseByTask(solution.TaskId);
+                var courseSummary = await _coursesServiceClient.GetCourseSummaryByTask(solution.TaskId);
+                var course = new CourseDTO
+                {
+                    Id = courseSummary.Id,
+                    Name = courseSummary.Name,
+                    MentorIds = courseSummary.MentorIds ?? Array.Empty<string>()
+                };
                 var student = await _authServiceClient.GetAccountData(solutionModel.StudentId);
                 var studentModel = _mapper.Map<AccountDataDto>(student);
                 _eventBus.Publish(new StudentPassTaskEvent(course, solutionModel, studentModel, task));
@@ -178,7 +183,7 @@ namespace HwProj.SolutionsService.API.Services
         {
             var ratingDate = DateTime.UtcNow;
             var task = await _coursesServiceClient.GetTask(solution.TaskId);
-            var course = await _coursesServiceClient.GetCourseByTask(solution.TaskId);
+            var courseSummary = await _coursesServiceClient.GetCourseSummaryByTask(solution.TaskId);
             var state = newRating >= task.MaxRating ? SolutionState.Final : SolutionState.Rated;
             await _solutionsRepository
                 .RateSolutionAsync(solution.Id, state, lecturerId, newRating, ratingDate, lecturerComment);
@@ -187,7 +192,7 @@ namespace HwProj.SolutionsService.API.Services
             solutionModel.LecturerComment = lecturerComment;
             solutionModel.Rating = newRating;
             solutionModel.RatingDate = ratingDate;
-            _eventBus.Publish(new RateEvent(task, solutionModel, course?.Id ?? 0, course?.Name, previousRating));
+            _eventBus.Publish(new RateEvent(task, solutionModel, courseSummary.Id, courseSummary.Name, previousRating));
         }
 
         public async Task DeleteSolutionAsync(long solutionId)

@@ -11,6 +11,7 @@ namespace HwProj.CoursesService.API.Services
         Task<CourseDTO?> GetAsync(long id, string userId = "", bool asView = false);
         Task<CourseDTO?> GetForEditingAsync(long id);
         Task<CourseDTO?> GetByTaskAsync(long taskId, string userId);
+        Task<CourseSummaryDTO?> GetCourseSummaryByTaskAsync(long taskId);
         Task<long> AddAsync(CreateCourseViewModel courseViewModel, string mentorId);
         Task DeleteAsync(long id);
         Task UpdateAsync(long courseId, Course updated);

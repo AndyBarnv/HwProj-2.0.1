@@ -74,7 +74,7 @@ namespace HwProj.SolutionsService.API.Controllers
                 return BadRequest();
 
             var solution = _mapper.Map<Solution>(solutionModel);
-            var solutionId = await _solutionsService.PostOrUpdateAsync(taskId, solution);
+            var solutionId = await _solutionsService.PostOrUpdateAsync(taskId, solution, task);
 
             return Ok(solutionId);
         }
@@ -84,12 +84,10 @@ namespace HwProj.SolutionsService.API.Controllers
             [FromBody] RateSolutionModel rateSolutionModel)
         {
             var solution = await _solutionsService.GetSolutionAsync(solutionId);
-            var task = await _coursesClient.GetTask(solution.TaskId);
-            var homework = await _coursesClient.GetHomework(task.HomeworkId);
-            var course = await _coursesClient.GetCourseById(homework.CourseId);
+            var courseSummary = await _coursesClient.GetCourseSummaryByTask(solution.TaskId);
 
             var lecturerId = Request.GetUserIdFromHeader();
-            if (course != null && lecturerId != null && course.MentorIds.Contains(lecturerId))
+            if (courseSummary != null && lecturerId != null && courseSummary.MentorIds.Contains(lecturerId))
             {
                 await _solutionsService.RateSolutionAsync(solutionId, lecturerId, rateSolutionModel.Rating, rateSolutionModel.LecturerComment);
                 return Ok();
@@ -127,9 +125,10 @@ namespace HwProj.SolutionsService.API.Controllers
         [HttpPost("{groupId}/{taskId}")]
         public async Task<long> PostSolution(long groupId, long taskId, [FromBody] SolutionViewModel solutionViewModel)
         {
+            var task = await _coursesClient.GetTask(taskId);
             var solution = _mapper.Map<Solution>(solutionViewModel);
             solution.GroupId = groupId;
-            var solutionId = await _solutionsService.PostOrUpdateAsync(taskId, solution);
+            var solutionId = await _solutionsService.PostOrUpdateAsync(taskId, solution, task);
             return solutionId;
         }
 

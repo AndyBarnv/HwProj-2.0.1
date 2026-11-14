@@ -61,6 +61,17 @@ namespace HwProj.CoursesService.Client
             return response.IsSuccessStatusCode ? await response.DeserializeAsync<CourseDTO>() : null;
         }
 
+        public async Task<CourseSummaryDTO?> GetCourseSummaryByTask(long taskId)
+        {
+            using var httpRequest = new HttpRequestMessage(
+                HttpMethod.Get,
+                _coursesServiceUri + $"api/Courses/getByTaskSummary/{taskId}");
+
+            httpRequest.TryAddUserId(_httpContextAccessor);
+            var response = await _httpClient.SendAsync(httpRequest);
+            return response.IsSuccessStatusCode ? await response.DeserializeAsync<CourseSummaryDTO>() : null;
+        }
+
         public async Task<CourseDTO?> GetCourseById(long courseId)
         {
             using var httpRequest = new HttpRequestMessage(
