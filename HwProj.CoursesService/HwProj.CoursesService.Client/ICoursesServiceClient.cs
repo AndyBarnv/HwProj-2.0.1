@@ -14,6 +14,10 @@ namespace HwProj.CoursesService.Client
         /// Получить полную информацию о курсе без учетов фильтров для преподавателей
         Task<Result<CourseDTO>> GetCourseDataRaw(long courseId);
         Task<CourseDTO?> GetCourseByTask(long taskId);
+        Task<CourseSummaryDTO?> GetCourseSummaryByTask(long taskId);
+        Task<CourseTableContextDTO?> GetCourseTableContext(long courseId);
+
+        Task<CourseTableContextDTO?> GetCourseTableContextByTask(long taskId);
         Task<Result> DeleteCourse(long courseId);
         Task<Result<long>> CreateCourse(CreateCourseViewModel model);
         Task<Result> UpdateCourse(UpdateCourseViewModel model, long courseId);
@@ -42,6 +46,7 @@ namespace HwProj.CoursesService.Client
         Task UpdateCourseGroup(UpdateGroupViewModel model, long courseId, long groupId);
         Task<GroupViewModel> GetCourseGroupsById(long courseId, string userId);
         Task AddStudentInGroup(long courseId, long groupId, string userId);
+        Task<GroupViewModel[]> GetGroupsByTask(long taskId);
         Task<GroupViewModel[]> GetGroupsById(params long[] groupIds);
         Task<long[]> GetGroupTasks(long groupId);
         Task<Result> AcceptLecturer(long courseId, string lecturerEmail, string lecturerId);

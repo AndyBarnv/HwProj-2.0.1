@@ -33,6 +33,22 @@ namespace HwProj.Models.CoursesService.ViewModels
         public bool IsCompleted { get; set; }
     }
 
+    public class CourseSummaryDTO
+    {
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public string[] MentorIds { get; set; } = Array.Empty<string>();
+    }
+
+    public class CourseTableContextDTO
+    {
+        public long Id { get; set; }
+        public string[] MentorIds { get; set; } = Array.Empty<string>();
+        public CourseMateViewModel[] CourseMates { get; set; } = Array.Empty<CourseMateViewModel>();
+        public GroupViewModel[] Groups { get; set; } = Array.Empty<GroupViewModel>();
+        public HomeworkViewModel[] Homeworks { get; set; } = Array.Empty<HomeworkViewModel>();
+    }
+
     public class CourseDTO : CoursePreview
     {
         public bool IsOpen { get; set; }
