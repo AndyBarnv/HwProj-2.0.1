@@ -292,10 +292,10 @@ public class SolutionsController : AggregationController
             StudentId = UserId
         };
 
-        var course = await _coursesServiceClient.GetCourseByTask(taskId);
+        var course = await _coursesServiceClient.GetCourseTableContextByTask(taskId);
         if (course is null) return BadRequest();
 
-        var courseMate = course.AcceptedStudents.FirstOrDefault(t => t.StudentId == solutionModel.StudentId);
+        var courseMate = course.CourseMates.FirstOrDefault(t => t.IsAccepted && t.StudentId == solutionModel.StudentId);
         if (courseMate == null) return BadRequest($"Студента с id {solutionModel.StudentId} не существует");
 
         if (model.GroupMateIds == null || model.GroupMateIds.Length == 0)
@@ -333,7 +333,7 @@ public class SolutionsController : AggregationController
     [ProducesResponseType(typeof(void), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> PostAutomatedSolution(PostAutomatedSolutionModel model, long courseId)
     {
-        var course = await _coursesServiceClient.GetCourseById(courseId);
+        var course = await _coursesServiceClient.GetCourseTableContext(courseId);
         if (course is null) return BadRequest($"Курс с Id {courseId} не найден");
         if (!course.MentorIds.Contains(UserId))
             return BadRequest("Добавлять автоматизированные решения могут только зарегистрированные на курс агенты");
@@ -348,7 +348,7 @@ public class SolutionsController : AggregationController
         if (task is null) return BadRequest($"Задача с {model.TaskIdType} = {model.TaskId} не найдена");
 
         var students =
-            await AuthServiceClient.GetAccountsData(course.AcceptedStudents.Select(x => x.StudentId).ToArray());
+            await AuthServiceClient.GetAccountsData(course.CourseMates.Where(x => x.IsAccepted).Select(x => x.StudentId).ToArray());
         var studentCandidates = model.StudentIdType switch
         {
             StudentIdType.Id => students.FirstOrDefault(x => x.UserId == model.StudentId) is { } s
@@ -393,7 +393,7 @@ public class SolutionsController : AggregationController
     [Authorize(Roles = Roles.LecturerOrExpertRole)]
     public async Task<IActionResult> PostEmptySolutionWithRate(long taskId, SolutionViewModel solution)
     {
-        var course = await _coursesServiceClient.GetCourseByTask(taskId);
+        var course = await _coursesServiceClient.GetCourseTableContextByTask(taskId);
         if (course == null || !course.MentorIds.Contains(UserId)) return Forbid();
         if (course.CourseMates.All(t => t.StudentId != solution.StudentId))
             return BadRequest($"Студент с id {solution.StudentId} не записан на курс");
@@ -407,7 +407,7 @@ public class SolutionsController : AggregationController
     [Authorize(Roles = Roles.StudentRole)]
     public async Task<IActionResult> GiveUp(long taskId)
     {
-        var course = await _coursesServiceClient.GetCourseByTask(taskId);
+        var course = await _coursesServiceClient.GetCourseTableContextByTask(taskId);
         if (course == null) return NotFound();
         if (course.CourseMates.All(t => t.StudentId != UserId))
             return BadRequest($"Студент с id {UserId} не записан на курс");
@@ -511,12 +511,12 @@ public class SolutionsController : AggregationController
     [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetSolutionAchievement(long taskId, long solutionId)
     {
-        var course = await _coursesServiceClient.GetCourseByTask(taskId);
+        var course = await _coursesServiceClient.GetCourseTableContextByTask(taskId);
         if (course is null) return BadRequest();
 
         var isMentor = course.MentorIds.Contains(UserId);
         if (!isMentor &&
-            course.AcceptedStudents.FirstOrDefault(t => t.StudentId == UserId) == null)
+            course.CourseMates.FirstOrDefault(t => t.IsAccepted && t.StudentId == UserId) == null)
             return BadRequest($"Студента или преподавателя с id {UserId} не существует");
 
         var solutions = await _solutionsClient.GetTaskSolutionStatistics(course.Id, taskId);
