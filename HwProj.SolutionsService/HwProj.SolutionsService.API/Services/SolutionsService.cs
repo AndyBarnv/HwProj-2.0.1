@@ -246,24 +246,27 @@ namespace HwProj.SolutionsService.API.Services
                     .ToArray();
             }
 
-            return await getSolutionsQuery.GroupBy(t => new { t.TaskId, t.StudentId })
-                .Select(t => t.OrderByDescending(x => x.PublicationDate))
-                .Select(t => new
+            return await getSolutionsQuery
+                .Where(s => !getSolutionsQuery.Any(previous =>
+                    previous.TaskId == s.TaskId &&
+                    previous.StudentId == s.StudentId &&
+                    (previous.PublicationDate > s.PublicationDate ||
+                     previous.PublicationDate == s.PublicationDate && previous.Id > s.Id)))
+                .Where(s => s.State == SolutionState.Posted)
+                .Select(s => new SolutionPreviewDto
                 {
-                    LastSolution = t.FirstOrDefault(),
-                    IsFirstTry = t.Skip(1).All(s => s.State == SolutionState.Posted)
+                    StudentId = s.StudentId,
+                    SolutionId = s.Id,
+                    TaskId = s.TaskId,
+                    GroupId = s.GroupId,
+                    PublicationDate = s.PublicationDate,
+                    IsFirstTry = !getSolutionsQuery.Any(previous =>
+                        previous.TaskId == s.TaskId &&
+                        previous.StudentId == s.StudentId &&
+                        previous.State != SolutionState.Posted)
                 })
-                .Where(t => t.LastSolution != null && t.LastSolution.State == SolutionState.Posted)
-                .OrderBy(t => t.LastSolution!.PublicationDate)
-                .Select(t => new SolutionPreviewDto
-                {
-                    StudentId = t.LastSolution!.StudentId,
-                    SolutionId = t.LastSolution.Id,
-                    GroupId = t.LastSolution.GroupId,
-                    TaskId = t.LastSolution.TaskId,
-                    PublicationDate = t.LastSolution.PublicationDate,
-                    IsFirstTry = t.IsFirstTry
-                })
+                .OrderBy(s => s.PublicationDate)
+                .ThenBy(s => s.SolutionId)
                 .ToArrayAsync();
         }
 
