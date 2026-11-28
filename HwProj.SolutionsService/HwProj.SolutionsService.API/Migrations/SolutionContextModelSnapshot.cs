@@ -19,7 +19,18 @@ namespace HwProj.SolutionsService.API.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("HwProj.Models.SolutionsService.Solution", b =>
+            modelBuilder.Entity("HwProj.SolutionsService.API.Models.GithubSolutionCommit", b =>
+                {
+                    b.Property<long>("Id");
+
+                    b.Property<string>("CommitHash");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LastGithubSolutionCommits");
+                });
+
+            modelBuilder.Entity("HwProj.SolutionsService.API.Models.Solution", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -45,26 +56,16 @@ namespace HwProj.SolutionsService.API.Migrations
 
                     b.Property<int>("State");
 
-                    b.Property<string>("StudentId");
+                    b.Property<string>("StudentId")
+                        .HasMaxLength(450);
 
                     b.Property<long>("TaskId");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("TaskId", "StudentId", "PublicationDate");
 
                     b.ToTable("Solutions");
-                });
-
-            modelBuilder.Entity("HwProj.SolutionsService.API.Models.GithubSolutionCommit", b =>
-                {
-                    b.Property<long>("Id");
-
-                    b.Property<string>("CommitHash");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("LastGithubSolutionCommits");
                 });
 #pragma warning restore 612, 618
         }

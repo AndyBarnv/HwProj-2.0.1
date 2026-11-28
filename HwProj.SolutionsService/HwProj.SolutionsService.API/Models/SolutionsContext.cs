@@ -15,7 +15,12 @@ namespace HwProj.SolutionsService.API.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Solution>().HasIndex(n => n.TaskId);
+            modelBuilder.Entity<Solution>()
+                .Property(n => n.StudentId)
+                .HasMaxLength(450);
+
+            modelBuilder.Entity<Solution>()
+                .HasIndex(n => new { n.TaskId, n.StudentId, n.PublicationDate });
         }
     }
 }
